@@ -42,9 +42,8 @@ const LoaderSVG = (
   commonSVG.appendChild(progressBarCircle);
 
   const progressIndicatorCircle = progressBarCircle.cloneNode();
+  progressIndicatorCircle.classList.add('progressIndicator');
   progressIndicatorCircle.setAttribute('stroke', secondaryColor);
-  progressIndicatorCircle.style.transition = 'stroke-dashoffset 1s ease-in-out';
-  progressIndicatorCircle.style.transformOrigin = 'center';
 
   const { circleLength, indicatorLength } = calculateProgressLengths(
     radius,
@@ -89,13 +88,6 @@ const ProgressInput = () => {
   progressInput.setAttribute('min', '0');
   progressInput.setAttribute('max', '100');
   progressInput.setAttribute('value', '50');
-  progressInput.style.width = '50px';
-  progressInput.style.height = '32px';
-  progressInput.style.padding = '5px 7px';
-  progressInput.style.borderRadius = '25px';
-  progressInput.style.border = '1px solid black';
-  progressInput.style.textAlign = 'center';
-  progressInput.style.boxSizing = 'border-box';
 
   label.appendChild(progressInput);
 
@@ -104,16 +96,12 @@ const ProgressInput = () => {
 
 const Checkbox = (text, secondaryColor) => {
   const label = document.createElement('label');
+  label.classList.add('checkboxLabel');
   label.textContent = text;
-  label.style.display = 'inline-block';
-  label.style.display = 'flex';
-  label.style.flexDirection = 'row-reverse';
-  label.style.alignItems = 'center';
-  label.style.gap = '15px';
 
   const checkbox = document.createElement('input');
+  checkbox.id = 'hiddenInput';
   checkbox.setAttribute('type', 'checkbox');
-  checkbox.style.display = 'none';
   checkbox.onclick = () => {
     console.log(checkbox.checked);
   };
@@ -121,29 +109,6 @@ const Checkbox = (text, secondaryColor) => {
 
   const slider = document.createElement('button');
   slider.classList.add('progressSlider');
-  slider.style.border = 'none';
-  slider.style.position = 'relative';
-  slider.style.width = '50px';
-  slider.style.height = '32px';
-  slider.style.transition = '.5s';
-  slider.style.backgroundColor = '#dfe6f0';
-  slider.style.borderRadius = '25px';
-  slider.style.padding = 0;
-
-  document.styleSheets[0].insertRule(
-    `.progressSlider::before {
-  position: absolute;
-  content: "";
-  height: 24px;
-  width: 24px;
-  left: 4px;
-  top: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%
-}`,
-    0,
-  );
 
   document.styleSheets[0].insertRule(
     `input:checked + .progressSlider {
@@ -152,20 +117,6 @@ const Checkbox = (text, secondaryColor) => {
     0,
   );
 
-  document.styleSheets[0].insertRule(
-    `input:focus + .progressSlider {
-  box-shadow: 0 0 1px #2196F3;
-}`,
-    0,
-  );
-
-  document.styleSheets[0].insertRule(
-    `input:checked + .progressSlider::before {
-  transform: translateX(18px);
-}
-`,
-    0,
-  );
   slider.onclick = () => {
     checkbox.click();
   };
@@ -177,11 +128,7 @@ const Checkbox = (text, secondaryColor) => {
 
 const StateControllers = (secondaryColor) => {
   const controllersBlock = document.createElement('div');
-  controllersBlock.style.width = `fit-content`;
-  controllersBlock.style.display = 'flex';
-  controllersBlock.style.flexDirection = 'column';
-  controllersBlock.style.alignItems = 'flex-start';
-  controllersBlock.style.gap = '10px';
+  controllersBlock.classList.add('stateControllers');
 
   const progressInput = ProgressInput();
   controllersBlock.appendChild(progressInput);
@@ -252,16 +199,8 @@ const Progress = (
   strokeWidth = 16,
   secondaryColor = '#005dff',
 ) => {
-  const mediaQuery = window.matchMedia('(min-width: 568px)');
-
   const progressBlock = document.createElement('div');
-  progressBlock.style.width = '100%';
-  progressBlock.style.height = '100%';
-  progressBlock.style.display = 'flex';
-  progressBlock.style.flexDirection = mediaQuery.matches ? 'row' : 'column';
-  progressBlock.style.justifyContent = 'center';
-  progressBlock.style.alignItems = 'center';
-  progressBlock.style.gap = '100px';
+  progressBlock.classList.add('progress');
   parentBlock.appendChild(progressBlock);
 
   const circleRadius = 65;
