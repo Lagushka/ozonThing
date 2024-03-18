@@ -5,7 +5,12 @@ const calculateProgressLengths = (radius, progress) => {
   return { circleLength, indicatorLength };
 };
 
-const LoaderSVG = (radius, strokeWidth, defaultProgress = 50) => {
+const LoaderSVG = (
+  radius,
+  strokeWidth,
+  secondaryColor,
+  defaultProgress = 50,
+) => {
   const commonSVG = document.createElementNS(
     'http://www.w3.org/2000/svg',
     'svg',
@@ -37,7 +42,7 @@ const LoaderSVG = (radius, strokeWidth, defaultProgress = 50) => {
   commonSVG.appendChild(progressBarCircle);
 
   const progressIndicatorCircle = progressBarCircle.cloneNode();
-  progressIndicatorCircle.setAttribute('stroke', '#005dff');
+  progressIndicatorCircle.setAttribute('stroke', secondaryColor);
   progressIndicatorCircle.style.transition = 'stroke-dashoffset 1s ease-in-out';
   progressIndicatorCircle.style.transformOrigin = 'center';
 
@@ -97,7 +102,7 @@ const ProgressInput = () => {
   return label;
 };
 
-const Checkbox = (text) => {
+const Checkbox = (text, secondaryColor) => {
   const label = document.createElement('label');
   label.textContent = text;
   label.style.display = 'inline-block';
@@ -142,7 +147,7 @@ const Checkbox = (text) => {
 
   document.styleSheets[0].insertRule(
     `input:checked + .progressSlider {
-  background-color: #005dff !important;
+  background-color: ${secondaryColor} !important;
 }`,
     0,
   );
@@ -170,7 +175,7 @@ const Checkbox = (text) => {
   return { checkboxInput: checkbox, label };
 };
 
-const StateControllers = () => {
+const StateControllers = (secondaryColor) => {
   const controllersBlock = document.createElement('div');
   controllersBlock.style.width = `fit-content`;
   controllersBlock.style.display = 'flex';
@@ -181,11 +186,16 @@ const StateControllers = () => {
   const progressInput = ProgressInput();
   controllersBlock.appendChild(progressInput);
 
-  const { label: animateCheckbox, checkboxInput: animateInput } =
-    Checkbox('Animate');
+  const { label: animateCheckbox, checkboxInput: animateInput } = Checkbox(
+    'Animate',
+    secondaryColor,
+  );
   controllersBlock.appendChild(animateCheckbox);
 
-  const { label: hideCheckbox, checkboxInput: hideInput } = Checkbox('Hide');
+  const { label: hideCheckbox, checkboxInput: hideInput } = Checkbox(
+    'Hide',
+    secondaryColor,
+  );
   controllersBlock.appendChild(hideCheckbox);
 
   return { controllersBlock, progressInput, animateInput, hideInput };
@@ -197,6 +207,7 @@ const connectSvgToControllers = (
   progressIndicatorCircle,
   progressInput,
   animateInput,
+  hideInput,
 ) => {
   progressInput.onchange = (event) => {
     const { indicatorLength } = calculateProgressLengths(
@@ -225,30 +236,53 @@ const connectSvgToControllers = (
       }
     }
   };
+
+  hideInput.onclick = () => {
+    if (hideInput.checked) {
+      loaderCircleSvg.style.transition = 'opacity .5s ease-in';
+      loaderCircleSvg.style.opacity = '0';
+    } else {
+      loaderCircleSvg.style.opacity = '1';
+    }
+  };
 };
 
-const Progress = (parentBlock, blockWidth, blockHeight, strokeWidth = 16) => {
+const Progress = (
+  parentBlock,
+  strokeWidth = 16,
+  secondaryColor = '#005dff',
+) => {
+  const mediaQuery = window.matchMedia('(min-width: 568px)');
+
   const progressBlock = document.createElement('div');
-  progressBlock.style.width = `${blockWidth}px`;
-  progressBlock.style.height = `${blockHeight}px`;
+  progressBlock.style.width = '100%';
+  progressBlock.style.height = '100%';
+  progressBlock.style.display = 'flex';
+  progressBlock.style.flexDirection = mediaQuery.matches ? 'row' : 'column';
+  progressBlock.style.justifyContent = 'center';
+  progressBlock.style.alignItems = 'center';
+  progressBlock.style.gap = '100px';
   parentBlock.appendChild(progressBlock);
 
-  const circleRadius = 70;
+  const circleRadius = 65;
 
   const { commonSVG: loaderCircleSvg, progressIndicatorCircle } = LoaderSVG(
     circleRadius,
     strokeWidth,
+    secondaryColor,
   );
-  const { controllersBlock, progressInput, animateInput } = StateControllers();
+  const { controllersBlock, progressInput, animateInput, hideInput } =
+    StateControllers(secondaryColor);
   connectSvgToControllers(
     circleRadius,
     loaderCircleSvg,
     progressIndicatorCircle,
     progressInput,
     animateInput,
+    hideInput,
   );
   progressBlock.appendChild(loaderCircleSvg);
   progressBlock.appendChild(controllersBlock);
 };
 
-Progress(document.body, 400, 600);
+Progress(document.body, 12);
