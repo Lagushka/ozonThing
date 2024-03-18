@@ -33,6 +33,13 @@ body {
   transform-origin: center;
 }
 
+.progressController {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 15px;
+}
+
 #progressInput {
   width: 50px;
   height: 32px;

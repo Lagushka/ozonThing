@@ -62,12 +62,8 @@ const LoaderSVG = (
 
 const ProgressInput = () => {
   const label = document.createElement('label');
+  label.classList.add('progressController');
   label.textContent = 'Value';
-  label.style.display = 'inline-block';
-  label.style.display = 'flex';
-  label.style.flexDirection = 'row-reverse';
-  label.style.alignItems = 'center';
-  label.style.gap = '15px';
   const progressInput = document.createElement('input');
   document.styleSheets[0].insertRule(
     `#progressInput::-webkit-outer-spin-button,
