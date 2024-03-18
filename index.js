@@ -159,17 +159,12 @@ const connectSvgToControllers = (
     }
   };
   progressInput.oninput = (event) => {
-    const inputValue = event.target.value;
-    if (inputValue.length > 1 && inputValue[0] === '0') {
-      event.target.value = inputValue.slice(1);
-    }
-
-    let progressValue = Number(event.target.value);
-    if (progressValue > 100) {
-      progressValue = event.target.value = '100';
-    }
-    if (progressValue < 0) {
-      progressValue = event.target.value = '0';
+    let inputValue = event.target.value;
+    if (/^([0-9]|[1-9][0-9]|100)$/.test(inputValue) === false) {
+      event.target.value = inputValue = inputValue.substring(
+        0,
+        inputValue.length - 1,
+      );
     }
 
     const { indicatorLength } = calculateProgressLengths(
