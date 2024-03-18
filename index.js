@@ -9,7 +9,7 @@ const LoaderSVG = (
   radius,
   strokeWidth,
   secondaryColor,
-  defaultProgress = 50,
+  defaultProgressValue,
 ) => {
   const commonSVG = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -47,7 +47,7 @@ const LoaderSVG = (
 
   const { circleLength, indicatorLength } = calculateProgressLengths(
     radius,
-    defaultProgress,
+    defaultProgressValue,
   );
   progressIndicatorCircle.setAttribute('stroke-dasharray', `${circleLength}px`);
 
@@ -151,11 +151,24 @@ const connectSvgToControllers = (
   progressInput,
   animateInput,
   hideInput,
+  defaultProgressValue,
 ) => {
   progressInput.onchange = (event) => {
+    if (!event.target.value) {
+      event.target.value = defaultProgressValue.toString();
+    }
+
+    let inputValue = Number(event.target.value);
+    if (inputValue > 100) {
+      inputValue = event.target.value = '100';
+    }
+    if (inputValue < 0) {
+      inputValue = event.target.value = '0';
+    }
+
     const { indicatorLength } = calculateProgressLengths(
       circleRadius,
-      event.target.value,
+      Number(inputValue),
     );
     progressIndicatorCircle.setAttribute(
       'stroke-dashoffset',
@@ -194,6 +207,7 @@ const Progress = (
   parentBlock,
   strokeWidth = 16,
   secondaryColor = '#005dff',
+  defaultProgressValue = 50,
 ) => {
   const progressBlock = document.createElement('div');
   progressBlock.classList.add('progress');
@@ -205,6 +219,7 @@ const Progress = (
     circleRadius,
     strokeWidth,
     secondaryColor,
+    defaultProgressValue,
   );
   const { controllersBlock, progressInput, animateInput, hideInput } =
     StateControllers(secondaryColor);
@@ -215,6 +230,7 @@ const Progress = (
     progressInput,
     animateInput,
     hideInput,
+    defaultProgressValue,
   );
   progressBlock.appendChild(loaderCircleSvg);
   progressBlock.appendChild(controllersBlock);
