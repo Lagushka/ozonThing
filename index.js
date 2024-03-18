@@ -11,11 +11,22 @@ const defineElementAttributes = (elem, attributes) => {
   }
 };
 
-const setProgressInputChangeHandler = (input, progressValue) => {
+const setProgressInputChangeHandler = (
+  input,
+  progressValue,
+  radius,
+  indicatorCircle,
+) => {
   input.onchange = (event) => {
     if (!event.target.value) {
       event.target.value = progressValue.toString();
     }
+
+    const { indicatorLength } = calculateProgressLengths(
+      radius,
+      Number(progressValue),
+    );
+    indicatorCircle.setAttribute('stroke-dashoffset', `${indicatorLength}px`);
   };
 };
 
@@ -77,7 +88,12 @@ const connectSvgToControllers = (
   hideInput,
   defaultProgressValue,
 ) => {
-  setProgressInputChangeHandler(progressInput, defaultProgressValue);
+  setProgressInputChangeHandler(
+    progressInput,
+    defaultProgressValue,
+    circleRadius,
+    progressIndicatorCircle,
+  );
   setProgressInputHandler(progressInput, circleRadius, progressIndicatorCircle);
 
   setAnimateOptionInputHandler(animateInput, progressIndicatorCircle);
