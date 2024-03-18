@@ -1,8 +1,88 @@
 const calculateProgressLengths = (radius, progress) => {
   const circleLength = 2 * Math.PI * radius;
-  const indicatorLength =
-    circleLength - Math.round((progress / 100) * circleLength);
+  const indicatorLength = circleLength - (progress / 100) * circleLength;
   return { circleLength, indicatorLength };
+};
+
+const defineElementAttributes = (elem, attributes) => {
+  const attrNames = Object.keys(attributes);
+  for (const attr of attrNames) {
+    elem.setAttribute(attr, attributes[attr]);
+  }
+};
+
+const setProgressInputChangeHandler = (input, progressValue) => {
+  input.onchange = (event) => {
+    if (!event.target.value) {
+      event.target.value = progressValue.toString();
+    }
+  };
+};
+
+const setProgressInputHandler = (input, radius, indicatorCircle) => {
+  input.oninput = (event) => {
+    const regExp = /^([0-9]|[1-9][0-9]|100)$/;
+    let inputValue = event.target.value;
+    if (!regExp.test(inputValue)) {
+      event.target.value = inputValue = inputValue.substring(
+        0,
+        inputValue.length - 1,
+      );
+    }
+
+    const { indicatorLength } = calculateProgressLengths(
+      radius,
+      Number(inputValue),
+    );
+    indicatorCircle.setAttribute('stroke-dashoffset', `${indicatorLength}px`);
+  };
+};
+
+const setAnimateOptionInputHandler = (input, indicatorCircle) => {
+  input.onclick = () => {
+    if (input.checked) {
+      indicatorCircle.animate(
+        [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+        {
+          duration: 1000,
+          iterations: Infinity,
+        },
+      );
+    } else {
+      const [animation] = indicatorCircle.getAnimations();
+      if (animation) {
+        animation.cancel();
+      }
+    }
+  };
+};
+
+const setHideOptionInputHandler = (input, loaderSvg) => {
+  input.onclick = () => {
+    if (input.checked) {
+      loaderSvg.style.transition = 'opacity .5s ease-in';
+      loaderSvg.style.opacity = '0';
+    } else {
+      loaderSvg.style.opacity = '1';
+    }
+  };
+};
+
+const connectSvgToControllers = (
+  circleRadius,
+  loaderCircleSvg,
+  progressIndicatorCircle,
+  progressInput,
+  animateInput,
+  hideInput,
+  defaultProgressValue,
+) => {
+  setProgressInputChangeHandler(progressInput, defaultProgressValue);
+  setProgressInputHandler(progressInput, circleRadius, progressIndicatorCircle);
+
+  setAnimateOptionInputHandler(animateInput, progressIndicatorCircle);
+
+  setHideOptionInputHandler(hideInput, loaderCircleSvg);
 };
 
 const LoaderSVG = (
@@ -18,14 +98,18 @@ const LoaderSVG = (
 
   const svgSide = radius * 2 + strokeWidth;
 
-  commonSVG.setAttribute('width', svgSide.toString());
-  commonSVG.setAttribute('height', svgSide.toString());
+  const commonSVGAttrs = {
+    width: svgSide.toString(),
+    height: svgSide.toString(),
+    viewBox: `0 0 ${svgSide} ${svgSide}`,
+  };
+  defineElementAttributes(commonSVG, commonSVGAttrs);
+
   commonSVG.setAttributeNS(
     'http://www.w3.org/2000/xmlns/',
     'xmlns:xlink',
     'http://www.w3.org/1999/xlink',
   );
-  commonSVG.setAttribute('viewBox', `0 0 ${svgSide} ${svgSide}`);
   commonSVG.style.transform = 'rotate(-90deg)';
 
   const progressBarCircle = document.createElementNS(
@@ -33,34 +117,43 @@ const LoaderSVG = (
     'circle',
   );
   const circleCenterCoords = radius + Math.round(strokeWidth / 2);
-  progressBarCircle.setAttribute('r', radius);
-  progressBarCircle.setAttribute('cx', circleCenterCoords);
-  progressBarCircle.setAttribute('cy', circleCenterCoords);
-  progressBarCircle.setAttribute('fill', 'transparent');
-  progressBarCircle.setAttribute('stroke', '#eef3f6');
-  progressBarCircle.setAttribute('stroke-width', `${strokeWidth}px`);
+
+  const progressBarCircleAttrs = {
+    r: radius,
+    cx: circleCenterCoords,
+    cy: circleCenterCoords,
+    fill: 'transparent',
+    stroke: '#eef3f6',
+    'stroke-width': `${strokeWidth}px`,
+  };
+  defineElementAttributes(progressBarCircle, progressBarCircleAttrs);
+
   commonSVG.appendChild(progressBarCircle);
 
   const progressIndicatorCircle = progressBarCircle.cloneNode();
   progressIndicatorCircle.classList.add('progressIndicator');
-  progressIndicatorCircle.setAttribute('stroke', secondaryColor);
 
   const { circleLength, indicatorLength } = calculateProgressLengths(
     radius,
     defaultProgressValue,
   );
-  progressIndicatorCircle.setAttribute('stroke-dasharray', `${circleLength}px`);
 
-  progressIndicatorCircle.setAttribute(
-    'stroke-dashoffset',
-    `${indicatorLength}px`,
+  const progressIndicatorCircleAttrs = {
+    stroke: secondaryColor,
+    'stroke-dasharray': `${circleLength}px`,
+    'stroke-dashoffset': `${indicatorLength}px`,
+  };
+  defineElementAttributes(
+    progressIndicatorCircle,
+    progressIndicatorCircleAttrs,
   );
+
   commonSVG.appendChild(progressIndicatorCircle);
 
   return { commonSVG, progressIndicatorCircle };
 };
 
-const ProgressInput = () => {
+const ProgressControlInput = () => {
   const label = document.createElement('label');
   label.classList.add('progressController');
   label.textContent = 'Value';
@@ -80,10 +173,11 @@ const ProgressInput = () => {
     0,
   );
   progressInput.id = 'progressInput';
-  progressInput.setAttribute('type', 'number');
-  progressInput.setAttribute('min', '0');
-  progressInput.setAttribute('max', '100');
-  progressInput.setAttribute('value', '50');
+  const progressInputAttrs = {
+    type: 'number',
+    value: '50',
+  };
+  defineElementAttributes(progressInput, progressInputAttrs);
 
   label.appendChild(progressInput);
 
@@ -98,9 +192,6 @@ const Checkbox = (text, secondaryColor) => {
   const checkbox = document.createElement('input');
   checkbox.id = 'hiddenInput';
   checkbox.setAttribute('type', 'checkbox');
-  checkbox.onclick = () => {
-    console.log(checkbox.checked);
-  };
   label.appendChild(checkbox);
 
   const slider = document.createElement('button');
@@ -122,11 +213,11 @@ const Checkbox = (text, secondaryColor) => {
   return { checkboxInput: checkbox, label };
 };
 
-const StateControllers = (secondaryColor) => {
+const StateControlElements = (secondaryColor) => {
   const controllersBlock = document.createElement('div');
   controllersBlock.classList.add('stateControllers');
 
-  const progressInput = ProgressInput();
+  const progressInput = ProgressControlInput();
   controllersBlock.appendChild(progressInput);
 
   const { label: animateCheckbox, checkboxInput: animateInput } = Checkbox(
@@ -144,77 +235,16 @@ const StateControllers = (secondaryColor) => {
   return { controllersBlock, progressInput, animateInput, hideInput };
 };
 
-const connectSvgToControllers = (
-  circleRadius,
-  loaderCircleSvg,
-  progressIndicatorCircle,
-  progressInput,
-  animateInput,
-  hideInput,
-  defaultProgressValue,
-) => {
-  progressInput.onchange = (event) => {
-    if (!event.target.value) {
-      event.target.value = defaultProgressValue.toString();
-    }
-  };
-  progressInput.oninput = (event) => {
-    let inputValue = event.target.value;
-    if (/^([0-9]|[1-9][0-9]|100)$/.test(inputValue) === false) {
-      event.target.value = inputValue = inputValue.substring(
-        0,
-        inputValue.length - 1,
-      );
-    }
-
-    const { indicatorLength } = calculateProgressLengths(
-      circleRadius,
-      Number(inputValue),
-    );
-    progressIndicatorCircle.setAttribute(
-      'stroke-dashoffset',
-      `${indicatorLength}px`,
-    );
-  };
-
-  animateInput.onclick = () => {
-    if (animateInput.checked) {
-      progressIndicatorCircle.animate(
-        [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
-        {
-          duration: 1000,
-          iterations: Infinity,
-        },
-      );
-    } else {
-      const [animation] = progressIndicatorCircle.getAnimations();
-      if (animation) {
-        animation.cancel();
-      }
-    }
-  };
-
-  hideInput.onclick = () => {
-    if (hideInput.checked) {
-      loaderCircleSvg.style.transition = 'opacity .5s ease-in';
-      loaderCircleSvg.style.opacity = '0';
-    } else {
-      loaderCircleSvg.style.opacity = '1';
-    }
-  };
-};
-
-const Progress = (
+const Progress = ({
   parentBlock,
   strokeWidth = 16,
   secondaryColor = '#005dff',
   defaultProgressValue = 50,
-) => {
+  circleRadius = 65,
+}) => {
   const progressBlock = document.createElement('div');
   progressBlock.classList.add('progress');
   parentBlock.appendChild(progressBlock);
-
-  const circleRadius = 65;
 
   const { commonSVG: loaderCircleSvg, progressIndicatorCircle } = LoaderSVG(
     circleRadius,
@@ -223,7 +253,7 @@ const Progress = (
     defaultProgressValue,
   );
   const { controllersBlock, progressInput, animateInput, hideInput } =
-    StateControllers(secondaryColor);
+    StateControlElements(secondaryColor);
   connectSvgToControllers(
     circleRadius,
     loaderCircleSvg,
@@ -237,4 +267,4 @@ const Progress = (
   progressBlock.appendChild(controllersBlock);
 };
 
-Progress(document.body, 12);
+Progress({ parentBlock: document.body, strokeWidth: 12 });
